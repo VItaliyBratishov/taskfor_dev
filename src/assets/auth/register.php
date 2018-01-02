@@ -1,6 +1,6 @@
 <?php session_start();
 
-header('Access-Control-Allow-Origin: *'); 
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token , Authorization');
 
@@ -13,7 +13,7 @@ if (!isset($_SESSION['id_u'])) {
 
 
 	$email = trim($_POST['email']);
-	$password = trim($_POST['password']);	
+	$password = trim($_POST['password']);
 	$name = trim($_POST['name']);
 
 	$phone = trim($_POST['phone']);
@@ -39,7 +39,16 @@ if (!isset($_SESSION['id_u'])) {
 	if (empty($err)) {
 
 
-		(String) $email_key =  md5(time().rand(2,458)) . md5(time().rand(1,7852));
+		$email_key =  md5(time().rand(2,458)) . md5(time().rand(1,7852));
+
+		do{
+
+			$token = md5(time().time().rand(0,41)).md5($users_t -> date . time()) . md5($users_t -> name . rand(0,22) . "Привет Мир!").md5('Это пасхалка!').
+			 md5(time().time().rand(0,12)).md5($users_t -> date . time()) . md5(rand(0,89) . "Пока Мир!").md5('Это не пасхалка!') ;
+
+			$temp = 	R::findOne('users','token = ?',array($token);
+
+		}while($temp != null);
 
 
 		$users = R::dispense('users');
@@ -50,8 +59,10 @@ if (!isset($_SESSION['id_u'])) {
 		$users -> confirmation_email = $email_key;
 		$users -> date = time();
 		$users -> permission = 0;
+		$users -> type = '';
 		$users -> ban = false;
 		$users -> reason_ban = null;
+		$users -> token = $token;
 
 		$id_u = R::store($users);
 
@@ -64,26 +75,34 @@ if (!isset($_SESSION['id_u'])) {
 		R::store($information);
 
 
-		$subject = "Подтверждение почты"; 
+		$subject = "Подтверждение почты";
 
-		$message = ' 
-		<html> 
-		<head> 
-		<title>Подтверждение почты | '. $email .' </title> 
-		</head> 
-		<body> 
-		<a href="https://rtrucking.000webhostapp.com/assets/confirmation_email/confirm.php?key='.$email_key .'">Для подтверждения перейдите по ссылке </a> 
-		</body> 
-		</html>'; 
+		$message = '
+		<html>
+		<head>
+		<title>Подтверждение почты | '. $email .' </title>
+		</head>
+		<body>
+		<a href="https://rtrucking.000webhostapp.com/assets/confirmation_email/confirm.php?key='.$email_key .'">Для подтверждения перейдите по ссылке </a>
+		</body>
+		</html>';
 
-		$headers  = "Content-type: text/html; charset=utf-8 \r\n"; 
+		$headers  = "Content-type: text/html; charset=utf-8 \r\n";
 
-		mail($email, $subject, $message, $headers); 
+		mail($email, $subject, $message, $headers);
 
+		 $data['err'] = false;
+		 $data['token'] = $token;
+		 $data['data'] = 'success';
 
-		echo json_encode("1");
+		echo json_encode($data);
 
 	}else{
-		echo json_encode(array_shift($err));
+		$data_err['err'] = true;
+
+		$data_err['data'] = array_shift($err);
+
+		echo json_encode($data_err
+	);
 	}
 }
